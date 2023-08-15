@@ -19,7 +19,6 @@ interface ImagesProps {
 }
 
 function Images(props: ImagesProps) {
-
   React.useEffect(() => {
   }, [props]);
 
@@ -34,9 +33,7 @@ function Images(props: ImagesProps) {
   };
 
   const handleImageUploaded = (image: Image) => {
-    let updatedImages = props.images;
-    updatedImages.push(image);
-    props.setImages(updatedImages);
+    props.setImages([...props.images, image]);
   }
 
   return (
