@@ -10,6 +10,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import React, { useState } from "react";
 import { Image } from "./types";
 import UploadImagePopup from "./uploadImage/UploadImagePopup";
+import EditImagePopup from "./editImage/EditImagePopup";
 import { deleteImage } from "./imagesApi";
 
 interface ImagesProps {
@@ -26,13 +27,17 @@ function Images(props: ImagesProps) {
     props.setSelectedImage(image);
   };
 
+  const handleEditImage = (image: Image) => {
+    props.setImages(props.images.map(x => x.id === image.id ? image : x));
+  };
+
   const handleDeleteImage = (image: Image) => {
     deleteImage({id: image.id});
     props.setImages(props.images.filter(x => x !== image));
     props.setSelectedImage(props.images[0]);
   };
 
-  const handleImageUploaded = (image: Image) => {
+  const onImageUploaded = (image: Image) => {
     props.setImages([...props.images, image]);
   }
 
@@ -64,7 +69,10 @@ function Images(props: ImagesProps) {
             props.images.length > 0 &&
             props.images.map((image, index) => (
               <Grid key={`image_${index}`} container>
-                <Grid item xs={11}>
+                <Grid item xs={1}>
+                  <EditImagePopup {...{image: image, handleEditImage: handleEditImage}}></EditImagePopup>
+                </Grid>
+                <Grid item xs={10}>
                   <Button
                     variant="text"
                     onClick={() => handleSelectImage(image)}
@@ -87,7 +95,7 @@ function Images(props: ImagesProps) {
             ))}
 
           <div style={{ marginTop: "auto", marginBottom: "40px" }}>
-            <UploadImagePopup {...{handleImageUploaded: handleImageUploaded}}></UploadImagePopup>
+            <UploadImagePopup {...{onImageUploaded: onImageUploaded}}></UploadImagePopup>
           </div>
         </Stack>
       </Stack>

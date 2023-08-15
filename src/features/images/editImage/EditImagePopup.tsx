@@ -1,6 +1,5 @@
 import "../images.css";
 import React, { useState } from "react";
-import { uploadImage } from "../imagesApi";
 import {
   Button,
   Dialog,
@@ -11,36 +10,39 @@ import {
   Stack,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import PhotoCamera from "@mui/icons-material/PhotoCamera";
-import { styled } from "@mui/material/styles";
+import EditIcon from "@mui/icons-material/Edit";
+import { Image } from "../types";
 
-const Input = styled("input")({
-  display: "none",
-});
-
-interface UploadImagePopupProps {
-  onImageUploaded: Function;
+interface EditImagePopupProps {
+  image: Image;
+  handleEditImage: Function;
 }
 
-function UploadImagePopup(props: UploadImagePopupProps) {
+function EditImagePopup(props: EditImagePopupProps) {
+  const [image, setImage] = useState<Image>(props.image);
   const [name, setName] = useState<string>("");
   const [description, setDescription] = useState<string>("");
-  const [file, setFile] = useState<string | Blob>("");
-  const [isUploadImagePopupShown, setUploadImagePopupShown] =
+  const [isEditImagePopupShown, setEditImagePopupShown] =
     useState<boolean>(false);
   const [hasNameError, setHasNameError] = useState<boolean>(false);
-  const [hasFileError, setHasFileError] = useState<boolean>(false);
+
+  React.useEffect(() => {
+    copyValuesFromProps();
+  }, [props]);
+
+  const copyValuesFromProps = () => {
+    setImage(props.image);
+    setName(props.image.name || "");
+    setDescription(props.image.description || "");
+  };
 
   const handleOpen = () => {
-    setUploadImagePopupShown(true);
+    setEditImagePopupShown(true);
   };
   const handleDiscard = () => {
-    setUploadImagePopupShown(false);
-    setName("");
-    setDescription("");
-    setFile("");
     setHasNameError(false);
-    setHasFileError(false);
+    copyValuesFromProps();
+    setEditImagePopupShown(false);
   };
 
   const handleChangeName = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,39 +52,37 @@ function UploadImagePopup(props: UploadImagePopupProps) {
     e: React.ChangeEvent<HTMLTextAreaElement>
   ) => {
     setDescription(e.target.value);
-  };
-  const handleSelectFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return;
-    setFile(e.target.files[0] || "");
-  };
+  }
 
-  const handleUploadImage = () => {
+  const handleEditImage = () => {
     let hasErrors = false;
     if (!name) {
       hasErrors = true;
       setHasNameError(true);
     }
-    if (!file) {
-      hasErrors = true;
-      setHasFileError(true);
-    }
     if (hasErrors) return;
 
-    const formData = new FormData();
-    formData.append("name", name!.trim());
-    if (description) formData.append("description", description.trim());
-    formData.append("content", file);
+    let updatedImage = image;
+    updatedImage.name = name;
+    updatedImage.description = description;
+    setImage(updatedImage);
+    props.handleEditImage(image);
 
-    uploadImage({ form: formData }).then((res) =>
-      props.onImageUploaded(res)
-    );
     handleDiscard();
   };
 
   return (
     <>
-      <Button onClick={handleOpen}>Upload an image</Button>
-      <Dialog open={isUploadImagePopupShown} onClose={handleDiscard}>
+      <IconButton
+        aria-label="edit"
+        onClick={handleOpen}
+        sx={{
+          color: (theme) => theme.palette.grey[500],
+        }}
+      >
+        <EditIcon />
+      </IconButton>
+      <Dialog open={isEditImagePopupShown} onClose={handleDiscard}>
         <DialogTitle sx={{ m: 0, p: 2 }}>
           <IconButton
             aria-label="close"
@@ -117,32 +117,14 @@ function UploadImagePopup(props: UploadImagePopupProps) {
                 onChange={handleChangeDescription}
               />
             </Stack>
-            <label
-              htmlFor="image_file"
-              className={hasFileError ? "error-label" : ""}
-            >
-              <Input
-                id="image_file"
-                accept="image/*"
-                type="file"
-                onInput={handleSelectFile}
-              ></Input>
-              <IconButton
-                color={file === "" ? "primary" : "success"}
-                component="span"
-              >
-                <PhotoCamera />
-                &nbsp;Select a file
-              </IconButton>
-            </label>
           </Stack>
         </DialogContent>
         <DialogActions>
           <Button autoFocus onClick={handleDiscard}>
             Discard
           </Button>
-          <Button variant="contained" autoFocus onClick={handleUploadImage}>
-            Upload
+          <Button variant="contained" autoFocus onClick={handleEditImage}>
+            Save
           </Button>
         </DialogActions>
       </Dialog>
@@ -150,4 +132,4 @@ function UploadImagePopup(props: UploadImagePopupProps) {
   );
 }
 
-export default UploadImagePopup;
+export default EditImagePopup;
